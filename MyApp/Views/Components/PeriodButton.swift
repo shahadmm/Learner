@@ -8,11 +8,21 @@
 import SwiftUI
 
 struct PeriodButton: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        Button(action: action){
+            Text(title)
+                .foregroundStyle(isSelected ? .orange : .gray)
+                .padding(.horizontal,20)
+                .padding(.vertical, 12)
+        }
+        .glassEffect(isSelected ? .regular.tint(.orange) : .regular)
     }
 }
 
 #Preview {
-    PeriodButton()
+    PeriodButton(title: "Week", isSelected: true, action:{})
+        .preferredColorScheme(.dark)
 }
