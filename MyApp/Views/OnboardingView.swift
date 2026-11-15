@@ -32,26 +32,17 @@ struct OnboardingView: View {
                     .font(.subheadline)
                     .foregroundStyle(.gray)
             }
-            //قسم الموضوع
-            VStack(alignment:.leading,spacing: 12 ){
-                Text ("I want to learn")
-                TextField ("swift", text:$viewModel.learningTopic)
-                Divider()
-            }
-            //قسم المدة
-            VStack(alignment:.leading,spacing: 12 ){
-            Text ("I want to learn it in a")
-            HStack
-                { ForEach (LearningPeriod.allCases, id: \.self){period in PeriodButton(
-                    title: period.rawValue, isSelected: viewModel.selectedPeriod == period, action: { viewModel.select(period) }
-                )
-                }
-            }
-            }
+            // قسم الموضوع والمدة
+         
+            GoalForm(
+                learningTopic: $viewModel.learningTopic,
+                selectedPeriod: $viewModel.selectedPeriod
+            )
             // الزر الي تحت
             Spacer()
+            
             VStack{
-                Button("Start Learning", action: viewModel .startLearning)
+                Button("Start Learning", action:viewModel .startLearning)
                     .disabled(!viewModel.canStartLearning)
                     .buttonStyle (.glassProminent)
                     .tint (.orange)
@@ -66,13 +57,10 @@ struct OnboardingView: View {
         }
         .padding()
     }
-    
-    
-   
-    
 }
 #Preview {
-    OnboardingView()
+        OnboardingView()
         .preferredColorScheme(.dark)
 }
+ 
 
