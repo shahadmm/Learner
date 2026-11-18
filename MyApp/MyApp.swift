@@ -1,9 +1,18 @@
 import SwiftUI
 
-@main struct MyApp: App {
+@main
+struct MyAppApp: App {
     var body: some Scene {
         WindowGroup {
-            OnboardingView()
+            NavigationStack {
+                if GoalStorage.load() == nil {
+                    OnboardingView()
+                } else {
+                    ActivityView()
+                }
+            }
+            .preferredColorScheme(.dark)
+          
         }
     }
 }

@@ -10,21 +10,16 @@ import Observation
 
 @Observable
 class OnboardingViewModel {
-    var selectedPeriod: LearningPeriod = .week
     var learningTopic: String = ""
-    
-    func select(_ period: LearningPeriod){
-        selectedPeriod = period
-    }
-        var canStartLearning : Bool{
-            !learningTopic.isEmpty
-           
-        }
-        func startLearning(){
-            print ("Start Learning tapped")
-            
-            
-            
-        }
+    var selectedPeriod: LearningPeriod = .week
+    var didStartLearning: Bool = false
+
+    var canStartLearning: Bool {
+        !learningTopic.isEmpty
     }
 
+    func startLearning() {
+        GoalStorage.save(LearningGoal(topic: learningTopic, period: selectedPeriod))
+        didStartLearning = true
+    }
+}

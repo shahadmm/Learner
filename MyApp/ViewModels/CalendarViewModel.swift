@@ -33,10 +33,14 @@ class CalendarViewModel {
     var months: [CalendarMonth] {
         guard let goal else { return [] }
         let firstDate = ([goal.startDate] + goal.log.keys).min() ?? goal.startDate
+        
+        let goalEndDate = calendar.date(byAdding: .day, value: goal.period.days, to: goal.startDate) ?? .now
+        
         var monthStart = calendar.dateInterval(of: .month, for: firstDate)?.start ?? firstDate
         var result: [CalendarMonth] = []
-
-        while monthStart <= .now {
+        
+        while monthStart <= max(goalEndDate, .now){
+    
             result.append(makeMonth(from: monthStart))
             guard let nextMonth = calendar.date(byAdding: .month, value: 1, to: monthStart) else { break }
             monthStart = nextMonth

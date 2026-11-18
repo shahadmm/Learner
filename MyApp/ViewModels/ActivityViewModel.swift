@@ -81,7 +81,7 @@ class ActivityViewModel {
     }
 
     var canFreeze: Bool {
-        status(on: .now) == nil && freezesUsed < maxFreezes
+        status(on: .now) != .freezed  && freezesUsed < maxFreezes
     }
 
     var freezeButtonTitle: String {

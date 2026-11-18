@@ -18,11 +18,13 @@ class LearningGoalViewModel {
     }
 
     func updateGoal() {
-        var goal = GoalStorage.load() ?? LearningGoal(topic: learningTopic, period: selectedPeriod)   // 🆕
-        goal.topic = learningTopic                             // 🆕
-        goal.period = selectedPeriod                           // 🆕
-        goal.startDate = .now                                  // 🆕
-        goal.streakStartDate = .now                            // 🆕
-        GoalStorage.save(goal)                                 // 🆕
+        var goal = GoalStorage.load() ?? LearningGoal(topic: learningTopic, period: selectedPeriod)
+        goal.topic = learningTopic
+        goal.period = selectedPeriod
+        goal.startDate = .now
+        goal.streakStartDate = .now
+        goal.lastLoggedAt = nil
+        goal.log[Calendar.current.startOfDay(for: .now)] = nil
+        GoalStorage.save(goal)
     }
 }
