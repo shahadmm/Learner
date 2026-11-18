@@ -1,29 +1,24 @@
-//
-//  LearningGoalView.swift
-//  MyApp
-//
-//  Created by shahad almaghrabi on 05/06/1448 AH.
-//
-
 import SwiftUI
 
 struct LearningGoalView: View {
     @State private var viewModel = LearningGoalViewModel()
-    
+    @Environment(\.dismiss) private var dismiss
+
     var body: some View {
-        VStack{
+        VStack {
             GoalForm(
                 learningTopic: $viewModel.learningTopic,
-                selectedPeriod:
-                    $viewModel.selectedPeriod)
+                selectedPeriod: $viewModel.selectedPeriod
+            )
+
             Spacer()
         }
         .padding()
         .navigationTitle("Learning Goal")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar{
-            ToolbarItem(placement: .topBarTrailing){
-                Button(action: viewModel.showUpdateAlert){
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(action: viewModel.showUpdateAlert) {
                     Image(systemName: "checkmark")
                 }
                 .buttonStyle(.glassProminent)
@@ -31,19 +26,20 @@ struct LearningGoalView: View {
             }
         }
         .alert("Update goal", isPresented: $viewModel.isShowingUpdateAlert) {
-            Button("Dismiss", role: .cancel){ }
-            Button("Update", action:viewModel .updateGoal)
-            
+            Button("Dismiss", role: .cancel) { }
+            Button("Update") {
+                viewModel.updateGoal()
+                dismiss()
+            }                                               
         } message: {
-                
-    Text("If you update now, your streak will start over.")
-                }
+            Text("If you update now, your streak will start over.")
+        }
     }
 }
+
 #Preview {
-    NavigationStack{
+    NavigationStack {
         LearningGoalView()
     }
-    
     .preferredColorScheme(.dark)
 }

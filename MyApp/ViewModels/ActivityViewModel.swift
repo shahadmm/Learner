@@ -1,72 +1,159 @@
-//
-//  ActivityViewModel.swift
-//  MyApp
-//
-//  Created by shahad almaghrabi on 06/06/1448 AH.
-//
-
 import Foundation
 import Observation
-@Observable
 
+@Observable
 class ActivityViewModel {
-    
-    var today: Date = .now
-    
-    private let dateFormatter:DateFormatter = {
+    var goal: LearningGoal?
+
+    private let calendar = Calendar.current
+
+    private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "EEEE, d MMMM"
         return formatter
     }()
-    
-    var todayText: String {
-        
-        dateFormatter .string(from: today)
+
+    func load() {
+        goal = GoalStorage.load()
+        resetStreakIfNeeded()
     }
-        var learnedDays: Int = 4
-        var freezedDays: Int = 0
 
-        var learnedText: String {
-            daysText(learnedDays)
-        }
+    // MARK: Header
 
-        var freezedText: String {
-            daysText(freezedDays)
+    var todayText: String {
+        dateFormatter.string(from: .now)
+    }
+
+    // MARK: Week
+
+    var weekDays: [Date] {
+        let today = calendar.startOfDay(for: .now)
+        let weekday = calendar.component(.weekday, from: today) // 1 = Sunday
+        var days: [Date] = []
+        for offset in 0..<7 {
+            if let day = calendar.date(byAdding: .day, value: offset - (weekday - 1), to: today) {
+                days.append(day)
+            }
         }
-    var isLoggedToday: Bool = false
+        return days
+    }
+
+    func weekdayLetter(_ date: Date) -> String {
+        calendar.veryShortWeekdaySymbols[calendar.component(.weekday, from: date) - 1]
+    }
+
+    func status(on date: Date) -> DayStatus? {
+        goal?.status(on: date)
+    }
+
+    // MARK: Stats
+
+    var learnedText: String {
+        daysText(count(.learned, since: goal?.streakStartDate))
+    }
+
+    var freezedText: String {
+        daysText(count(.freezed, since: goal?.streakStartDate))
+    }
+
+    // MARK: Log
+
+    var isLearnedToday: Bool {
+        status(on: .now) == .learned
+    }
 
     var logButtonTitle: String {
-        isLoggedToday ? "Logged as Learned" : "Log as Learned"
+        isLearnedToday ? "Logged as Learned" : "Log as Learned"
     }
 
     func logAsLearned() {
-        learnedDays += 1
-        isLoggedToday = true
+        record(.learned)
     }
-    var isFreezedToday: Bool = false
-    let maxFreezes: Int = 2
+
+    // MARK: Freeze
+
+    var maxFreezes: Int {
+        goal?.period.maxFreezes ?? 0
+    }
+
+    var freezesUsed: Int {
+        count(.freezed, since: goal?.startDate)
+    }
 
     var canFreeze: Bool {
-        !isLoggedToday && !isFreezedToday && freezedDays < maxFreezes
+        status(on: .now) == nil && freezesUsed < maxFreezes
     }
 
     var freezeButtonTitle: String {
-        isFreezedToday ? "Freezed for a day" : "Freeze for a day"
+        status(on: .now) == .freezed ? "Freezed for a day" : "Freeze for a day"
     }
 
     var freezesUsedText: String {
-        "\(freezedDays) out of \(maxFreezes) Freezes used"
+        "\(freezesUsed) out of \(maxFreezes) Freezes used"
     }
 
     func freezeToday() {
-        freezedDays += 1
-        isFreezedToday = true
+        record(.freezed)
     }
 
-        private func daysText(_ count: Int) -> String {
-            count == 1 ? "1 day" : "\(count) days"
+    // MARK: Goal end
+
+    var isGoalFinished: Bool {
+        guard let goal,
+              let endDate = calendar.date(byAdding: .day, value: goal.period.days, to: calendar.startOfDay(for: goal.startDate))
+        else { return false }
+        return Date.now >= endDate
+    }
+
+    var isGoalMet: Bool {
+        guard let goal else { return false }
+        let doneDays = count(.learned, since: goal.startDate) + count(.freezed, since: goal.startDate)
+        return doneDays >= goal.period.days
+    }
+
+    var finishIcon: String {
+        isGoalMet ? "hands.clap.fill" : "exclamationmark.circle.fill"
+    }
+
+    var finishTitle: String {
+        isGoalMet ? "Well done!" : "You didn't reach your goal this time."
+    }
+
+    var finishMessage: String {
+        isGoalMet ? "Ready for your next goal?" : "Want to set another goal?"
+    }
+
+    // MARK: Private
+
+    private func record(_ status: DayStatus) {
+        guard var goal else { return }
+        goal.log[calendar.startOfDay(for: .now)] = status
+        goal.lastLoggedAt = .now
+        save(goal)
+    }
+
+    private func resetStreakIfNeeded() {
+        guard var goal else { return }
+        let lastActivity = goal.lastLoggedAt ?? goal.startDate
+        let hoursPassed = Date.now.timeIntervalSince(lastActivity) / 3600
+        if hoursPassed > 32 {
+            goal.streakStartDate = .now
+            save(goal)
         }
     }
 
+    private func save(_ goal: LearningGoal) {
+        self.goal = goal
+        GoalStorage.save(goal)
+    }
 
-    
+    private func count(_ status: DayStatus, since date: Date?) -> Int {
+        guard let goal, let date else { return 0 }
+        let start = calendar.startOfDay(for: date)
+        return goal.log.filter { $0.key >= start && $0.value == status }.count
+    }
+
+    private func daysText(_ count: Int) -> String {
+        count == 1 ? "1 day" : "\(count) days"
+    }
+}
